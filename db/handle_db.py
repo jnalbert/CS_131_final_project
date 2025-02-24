@@ -16,7 +16,6 @@ def init_db():
     conn.close()
 
 
-
 def insert_user(username, password):
     conn = sqlite3.connect('password_manager.db')
     cursor = conn.cursor()
@@ -41,7 +40,7 @@ def get_user(username):
     conn.close()
     return user
 
-def retreieve_password(username):
+def retrieve_password(username):
     conn = sqlite3.connect('password_manager.db')
     cursor = conn.cursor()
 
@@ -63,11 +62,7 @@ def main():
     #example code
     insert_user('admin', 'admin')
     print(get_user('admin'))
-    print(retreieve_password('admin'))
-
-
-
-
+    print(retrieve_password('admin'))
 
 
 if __name__ == '__main__':

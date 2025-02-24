@@ -5,6 +5,7 @@ from client.landing_page import LandingPage
 from client.login_page import LoginPage
 from client.signup_page import SignupPage
 from client.passwords_page import PasswordsPage
+from db.handle_db import init_db
 
 
 class MainWindow(QMainWindow):
@@ -44,6 +45,7 @@ class MainWindow(QMainWindow):
 
 
 def main():
+    init_db()
     app = QApplication(sys.argv)
     window = MainWindow()
     window.show()

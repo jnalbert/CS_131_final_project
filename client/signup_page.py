@@ -1,5 +1,6 @@
 from PySide6.QtCore import QTimer
 from .auth_page import AuthPage
+from db.handle_db import retrieve_password
 
 class SignupPage(AuthPage):
     def __init__(self, main_window):
@@ -13,9 +14,15 @@ class SignupPage(AuthPage):
 
         self.submit_button.setEnabled(False)
         print(f"Starting sign up processing for: {username}")
+        
+        password = retrieve_password(username)
+        
+        # check that the password hashes are the same
+        print(password)
 
+        self.finish_signup(username)
         # Simulate time-consuming sign-up processing (e.g., registering the user)
-        QTimer.singleShot(2000, lambda: self.finish_signup(username))
+        # QTimer.singleShot(2000, lambda: self.finish_signup(username))
 
     def finish_signup(self, username):
         print(f"Finished processing sign up for: {username}")

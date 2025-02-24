@@ -1,5 +1,6 @@
 from PySide6.QtCore import QTimer
 from .auth_page import AuthPage
+from db.handle_db import insert_user, get_user
 
 class LoginPage(AuthPage):
     def __init__(self, main_window):
@@ -14,9 +15,17 @@ class LoginPage(AuthPage):
         # Disable the submit button to prevent duplicate submissions
         self.submit_button.setEnabled(False)
         print(f"Starting login processing for: {username}")
+        
+        user = get_user(username)
+        if user:
+            print(user)
+            print(f"User {username} already exists.")
+            return
 
-        # Simulate time-consuming login processing (e.g., checking credentials)
-        QTimer.singleShot(2000, lambda: self.finish_login(username))
+        insert_user(username, "password")
+        self.finish_login(username)
+
+        # QTimer.singleShot(2000, lambda: self.finish_login(username))
 
     def finish_login(self, username):
         print(f"Finished processing login for: {username}")
