@@ -1,6 +1,8 @@
 import cv2
 import mediapipe as mp
 import numpy as np
+import json
+import os
 from gesture_conversions import normalize_landmarks, calculate_finger_angles, get_gesture_hash
 
 # Initialize MediaPipe Hands and Drawing modules
@@ -35,45 +37,42 @@ def classify_gesture(landmarks):
         return "Fist"
     elif count == 5:
         return "Open Hand"
-    elif count == 1:
+    elif count == 1 and index_extended:
         return "Pointing"
-    elif count == 2:
-        return "Two Fingers"
+    elif count == 2 and index_extended and middle_extended:
+        return "Peace Sign"
     elif count == 3:
         return "Three Fingers"
     elif count == 4:
         return "Four Fingers"
     else:
-        return "Unknown Gesture"
+        return "Custom Gesture"
 
-def calculate_gesture_similarity(hash1, hash2):
-    """
-    Calculate similarity between two gesture hashes.
-    Returns a value between 0 (completely different) and 1 (identical).
-    """
-    # Convert hex hashes to binary arrays for comparison
-    try:
-        # Convert each hex character to a 4-bit binary value
-        bin1 = ''.join([bin(int(c, 16))[2:].zfill(4) for c in hash1])
-        bin2 = ''.join([bin(int(c, 16))[2:].zfill(4) for c in hash2])
-        
-        # Count matching bits
-        matching_bits = sum(b1 == b2 for b1, b2 in zip(bin1, bin2))
-        
-        # Calculate similarity as percentage of matching bits
-        similarity = matching_bits / len(bin1)
-        return similarity
-    except:
-        # Fallback if hash conversion fails
-        return 0.0
+# Function to save and load gestures from a file
+def save_gestures(gestures, filename="saved_gestures.json"):
+    with open(filename, 'w') as f:
+        json.dump(gestures, f)
+    print(f"Gestures saved to {filename}")
+
+def load_gestures(filename="saved_gestures.json"):
+    if os.path.exists(filename):
+        with open(filename, 'r') as f:
+            return json.load(f)
+    return {}
 
 def main():
     cap = cv2.VideoCapture(0)
+    
     # Dictionary to store registered gesture hashes
-    registered_gestures = {}
+    registered_gestures = load_gestures()
     current_mode = "recognition"  # Modes: "recognition", "registration"
     current_user = "user1"  # Default user
-    similarity_threshold = 0.85  # Threshold for gesture matching (adjustable)
+    
+    # Dynamic calibration data
+    last_gestures = []  # Store the last few gesture hashes for the same gesture
+    calibration_gesture = None  # Current gesture being calibrated
+    
+    print(f"Loaded {len(registered_gestures)} gestures")
     
     # Optionally flip the frame to act like a mirror.
     with mp_hands.Hands(max_num_hands=1, 
@@ -92,7 +91,6 @@ def main():
             gesture = "No Hand Detected"
             gesture_hash = None
             matched_gesture = None
-            best_similarity = 0.0
 
             if results.multi_hand_landmarks:
                 for hand_landmarks in results.multi_hand_landmarks:
@@ -108,43 +106,41 @@ def main():
                     # Generate hash for the current gesture
                     gesture_hash = get_gesture_hash(landmarks, salt=current_user)
                     
-                    # Check for similar gestures using threshold
-                    best_similarity = 0.0
+                    # Check if the hash exactly matches any registered gestures
                     matched_gesture = None
-                    for name, hash_value in registered_gestures.items():
-                        similarity = calculate_gesture_similarity(hash_value, gesture_hash)
-                        if similarity > best_similarity:
-                            best_similarity = similarity
-                            if similarity >= similarity_threshold:
-                                matched_gesture = name
+                    for name, registered_hash in registered_gestures.items():
+                        if gesture_hash == registered_hash:
+                            matched_gesture = name
+                            break
                     
                     # Display information on the frame
                     cv2.putText(frame, f"Gesture: {gesture}", (10, 40), cv2.FONT_HERSHEY_SIMPLEX, 
                                 0.8, (0, 255, 0), 2, cv2.LINE_AA)
                     
                     if matched_gesture:
-                        cv2.putText(frame, f"Matched: {matched_gesture} ({best_similarity:.2f})", 
-                                   (10, 70), cv2.FONT_HERSHEY_SIMPLEX, 
+                        cv2.putText(frame, f"Matched: {matched_gesture}", (10, 70), cv2.FONT_HERSHEY_SIMPLEX, 
                                    0.8, (0, 255, 0), 2, cv2.LINE_AA)
-                    elif best_similarity > 0:
-                        cv2.putText(frame, f"Best match: {best_similarity:.2f}", 
-                                   (10, 70), cv2.FONT_HERSHEY_SIMPLEX, 
-                                   0.8, (255, 165, 0), 2, cv2.LINE_AA)
                     
-                    # Show truncated hash for reference
-                    short_hash = gesture_hash[:8] if gesture_hash else "None"
+                    # Show hash for reference
+                    short_hash = gesture_hash if gesture_hash else "None"
                     cv2.putText(frame, f"Hash: {short_hash}", (10, 100), cv2.FONT_HERSHEY_SIMPLEX, 
                                0.8, (0, 255, 0), 2, cv2.LINE_AA)
+                    
+                    # Store last gesture hash in calibration mode
+                    if current_mode == "calibration" and calibration_gesture:
+                        cv2.putText(frame, f"Calibrating: {calibration_gesture} ({len(last_gestures)}/5)", 
+                                  (10, 130), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 255), 2, cv2.LINE_AA)
 
             # Display mode and instructions
             mode_color = (0, 255, 255) if current_mode == "registration" else (255, 255, 255)
+            mode_color = (0, 165, 255) if current_mode == "calibration" else mode_color
+            
             cv2.putText(frame, f"Mode: {current_mode}", (10, frame.shape[0] - 100), 
                        cv2.FONT_HERSHEY_SIMPLEX, 0.8, mode_color, 2, cv2.LINE_AA)
-            cv2.putText(frame, f"Threshold: {similarity_threshold:.2f}", (10, frame.shape[0] - 70), 
-                       cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 255), 2, cv2.LINE_AA)
-            cv2.putText(frame, "R: Register mode | V: Verify mode | S: Save gesture", 
+            
+            cv2.putText(frame, "R: Register | V: Verify | C: Calibrate | S: Save", 
                        (10, frame.shape[0] - 40), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 1, cv2.LINE_AA)
-            cv2.putText(frame, "↑/↓: Adjust threshold | Q: Quit", (10, frame.shape[0] - 10), 
+            cv2.putText(frame, "L: Load gestures | Q: Quit", (10, frame.shape[0] - 10), 
                        cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 1, cv2.LINE_AA)
 
             cv2.imshow("Gesture Recognition", frame)
@@ -161,30 +157,45 @@ def main():
                 current_mode = "recognition"
                 print("Verification mode: Make a gesture to check matches")
                 
+            elif key == ord("c"):
+                # Switch to calibration mode
+                current_mode = "calibration"
+                last_gestures = []
+                calibration_gesture = input("Enter gesture name to calibrate: ")
+                print(f"Calibrating gesture '{calibration_gesture}'. Hold the gesture and press Space 5 times.")
+                
+            elif key == 32 and current_mode == "calibration" and gesture_hash and calibration_gesture:
+                # Space bar pressed during calibration - capture current gesture
+                last_gestures.append(gesture_hash)
+                print(f"Captured sample {len(last_gestures)}/5 for {calibration_gesture}")
+                
+                if len(last_gestures) >= 5:
+                    # Use the most common hash as the registered one
+                    from collections import Counter
+                    most_common_hash = Counter(last_gestures).most_common(1)[0][0]
+                    registered_gestures[calibration_gesture] = most_common_hash
+                    print(f"Calibration complete: Registered '{calibration_gesture}' with hash: {most_common_hash}")
+                    current_mode = "recognition"
+                    last_gestures = []
+                    calibration_gesture = None
+                
             elif key == ord("s") and current_mode == "registration" and gesture_hash:
                 # Save the current gesture hash with a name
                 gesture_name = input("Enter a name for this gesture: ")
                 if gesture_name:
                     registered_gestures[gesture_name] = gesture_hash
                     print(f"Gesture '{gesture_name}' registered with hash: {gesture_hash}")
+                    save_gestures(registered_gestures)
                     
+            elif key == ord("l"):
+                # Load gestures from file
+                registered_gestures = load_gestures()
+                print(f"Loaded {len(registered_gestures)} gestures")
+                
             elif key == ord("q"):
+                # Save gestures before quitting
+                save_gestures(registered_gestures)
                 break
-                
-            elif key == ord("c") and gesture_hash:
-                # Print the current gesture hash for debugging
-                print(f"Current gesture hash: {gesture_hash}")
-                print(f"Registered gestures: {registered_gestures}")
-                
-            elif key == 82 or key == ord("="): # Up arrow or '='
-                # Increase threshold (make matching stricter)
-                similarity_threshold = min(0.99, similarity_threshold + 0.01)
-                print(f"Similarity threshold increased to: {similarity_threshold:.2f}")
-                
-            elif key == 84 or key == ord("-"): # Down arrow or '-'
-                # Decrease threshold (make matching more lenient)
-                similarity_threshold = max(0.50, similarity_threshold - 0.01)
-                print(f"Similarity threshold decreased to: {similarity_threshold:.2f}")
 
     cap.release()
     cv2.destroyAllWindows()
