@@ -1,6 +1,7 @@
 from PySide6.QtCore import QTimer
 from .auth_page import AuthPage
 from db.handle_db import insert_user, get_user
+from hands.gesture_conversions import quantize_features, create_hash_from_features, get_gesture_hash
 
 class LoginPage(AuthPage):
     def __init__(self, main_window):
@@ -21,6 +22,8 @@ class LoginPage(AuthPage):
             print(user)
             print(f"User {username} already exists.")
             return
+        
+
 
         insert_user(username, "password")
         self.finish_login(username)
@@ -31,3 +34,4 @@ class LoginPage(AuthPage):
         print(f"Finished processing login for: {username}")
         # For demonstration, we simulate a successful login by passing dummy data.
         self.main_window.go_to_passwords(username)
+
