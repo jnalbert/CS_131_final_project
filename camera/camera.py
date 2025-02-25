@@ -2,6 +2,8 @@ import cv2
 
 # https://stackoverflow.com/questions/64272731/open-cv-shows-green-screen-on-jetson-nano
 
+
+
 def gstreamer_pipeline(
     capture_width=1920,
     capture_height=1080,
