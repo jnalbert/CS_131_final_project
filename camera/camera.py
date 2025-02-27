@@ -25,7 +25,7 @@ def show_camera():
 
     # Full list of Video Capture APIs (video backends): https://docs.opencv.org/3.4/d4/d15/group__videoio__flags__base.html
     # For webcams, we use V4L2
-    video_capture = cv2.VideoCapture(pipeline, cv2.CAP_GSTREAMER)
+    video_capture = cv2.VideoCapture('/dev/video0', cv2.CAP_V4L2)
 
     if video_capture.isOpened():
         try:
