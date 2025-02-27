@@ -48,7 +48,7 @@ def show_camera():
 
         finally:
             video_capture.release()
-            cv2.destroyAllWindows()
+            # cv2.destroyAllWindows()
     else:
         print("Error: Unable to open camera")
 
