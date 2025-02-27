@@ -73,7 +73,7 @@ def process_image(image_path=None):
         
         # Capture image from camera if no path provided
         if image_path is None:
-            cap = cv2.VideoCapture(0)
+            cap = cv2.VideoCapture('/dev/video0')
             print("Press SPACE to capture an image...")
             
             while True:
