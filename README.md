@@ -75,34 +75,6 @@ The system employs multiple security features:
 - **Feature Quantization**: Reduces sensitivity to small variations in gesture performance
 - **Salt-based Hashing**: Associates gestures with specific usernames for additional security
 
-## 🔧 Technical Implementation
-
-### Architecture
-- **Client Module**: User interface components including authentication pages
-- **DB Module**: Database handling for user credentials
-- **Hands Module**: Gesture recognition and feature extraction
-- **Camera Module**: Video capture and processing
-
-### Key Components
-- **AuthPage**: Base class for login and signup interfaces
-- **HandTracker**: Core gesture recognition and processing
-- **GestureConversions**: Algorithms for generating consistent gesture hashes
-- **MainWindow**: Application coordinator managing page transitions
-
-## 🤝 Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## 📝 License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
 ## 🙏 Acknowledgments
 
 - [MediaPipe](https://google.github.io/mediapipe/) for the hand tracking technology
