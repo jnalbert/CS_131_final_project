@@ -31,7 +31,7 @@ class AuthPage(QWidget):
         self.setLayout(layout)
 
         # Initialize camera
-        self.capture = cv2.VideoCapture(0)
+        self.capture = cv2.VideoCapture('/dev/video0')
         if not self.capture.isOpened():
             self.video_label.setText("Unable to access camera.")
         else:
