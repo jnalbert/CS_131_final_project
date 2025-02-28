@@ -23,16 +23,15 @@ class MainWindow(QMainWindow):
         self.signup_page = SignupPage(self)
 
         self.stack.addWidget(self.landing_page)
-        self.stack.addWidget(self.login_page)
         self.stack.addWidget(self.signup_page)
-
+        self.stack.addWidget(self.login_page)
         self.stack.setCurrentIndex(0)
 
     def go_to_login(self):
-        self.stack.setCurrentIndex(1)
+        self.stack.setCurrentIndex(2)
 
     def go_to_signup(self):
-        self.stack.setCurrentIndex(2)
+        self.stack.setCurrentIndex(1)
 
     def go_to_landing(self):
         self.stack.setCurrentIndex(0)
