@@ -1,4 +1,6 @@
 from PySide6.QtCore import QTimer
+
+from hands.hand_tracker import process_image_with_frame
 from .auth_page import AuthPage
 from db.handle_db import retrieve_password
 
@@ -17,12 +19,22 @@ class SignupPage(AuthPage):
         
         password = retrieve_password(username)
         
-        # check that the password hashes are the same
-        print(password)
-
-        self.finish_signup(username)
-        # Simulate time-consuming sign-up processing (e.g., registering the user)
-        # QTimer.singleShot(2000, lambda: self.finish_signup(username))
+        if (not password):
+            print("No password found for user")
+            return
+        password = password[0]
+        
+        password_hash = process_image_with_frame(self.frame, username)
+        
+        if (password_hash['gesture_hash'] == password):
+            print('saved pass', password)
+            print('input pass', password_hash['gesture_hash'])
+            print("Password is correct")
+            self.finish_signup(username)
+        else:
+            print('saved pass', password)
+            print('input pass', password_hash['gesture_hash'])
+            print("Password is incorrect")
 
     def finish_signup(self, username):
         print(f"Finished processing sign up for: {username}")

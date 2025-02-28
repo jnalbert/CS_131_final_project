@@ -17,15 +17,23 @@ def init_db():
 
 
 def insert_user(username, password):
+    # Ensure username and password are strings
+    if not isinstance(username, str) or not isinstance(password, str):
+        raise TypeError("Username and password must be strings")
+    
     conn = sqlite3.connect('password_manager.db')
     cursor = conn.cursor()
 
-    cursor.execute('''
-        INSERT INTO users (username, password) VALUES (?, ?)
-    ''', (username, password))
-
-    conn.commit()
-    conn.close()
+    try:
+        cursor.execute('''
+            INSERT INTO users (username, password) VALUES (?, ?)
+        ''', (username, password))
+        conn.commit()
+    except sqlite3.Error as e:
+        print(f"Database error: {e}")
+        conn.rollback()
+    finally:
+        conn.close()
 
 
 def get_user(username):

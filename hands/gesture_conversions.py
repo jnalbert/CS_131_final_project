@@ -1,16 +1,6 @@
 import numpy as np
-import hashlib
 
 def normalize_landmarks(landmarks):
-    """
-    Normalize landmarks relative to wrist position and hand size.
-    
-    Args:
-        landmarks: List of landmark objects with x, y, z attributes
-        
-    Returns:
-        List of normalized landmark dictionaries
-    """
     # Use wrist as origin
     wrist = landmarks[0]
     
@@ -35,15 +25,6 @@ def normalize_landmarks(landmarks):
     return normalized
 
 def calculate_finger_angles(landmarks):
-    """
-    Calculate angles between finger joints for more stable features.
-    
-    Args:
-        landmarks: List of landmark objects with x, y, z attributes
-        
-    Returns:
-        List of angles (in radians)
-    """
     angles = []
     
     # Define finger joint indices - (base, middle, tip) for each finger
@@ -64,11 +45,11 @@ def calculate_finger_angles(landmarks):
         mid = landmarks[mid_idx]
         tip = landmarks[tip_idx]
         
-        # Calculate vectors
+
         v1 = np.array([mid.x - base.x, mid.y - base.y, mid.z - base.z])
         v2 = np.array([tip.x - mid.x, tip.y - mid.y, tip.z - mid.z])
         
-        # Handle zero vectors
+
         v1_norm = np.linalg.norm(v1)
         v2_norm = np.linalg.norm(v2)
         
@@ -99,16 +80,6 @@ def calculate_finger_angles(landmarks):
     return angles
 
 def quantize_features(features, num_bins=5):
-    """
-    Quantize features into discrete bins to reduce sensitivity.
-    
-    Args:
-        features: List of feature values
-        num_bins: Number of bins to use for quantization
-        
-    Returns:
-        List of quantized feature values
-    """
     # Pre-defined bin edges for more consistent quantization
     angle_bins = np.linspace(0, np.pi, num_bins + 1)
     finger_state_bins = [0, 0.5, 1]  # For binary finger state features
@@ -123,26 +94,14 @@ def quantize_features(features, num_bins=5):
             
         # Find the bin index
         bin_index = np.digitize(feature, bins) - 1
-        bin_index = max(0, min(bin_index, len(bins) - 2))  # Clamp to valid range
+        bin_index = max(0, min(bin_index, len(bins) - 2))
         quantized.append(bin_index)
     
     return quantized
 
 def create_hash_from_features(features):
-    """
-    Create a simple hash from quantized features.
-    
-    Args:
-        features: List of quantized feature values
-        
-    Returns:
-        Hash string
-    """
-    # Convert features to string with unique separator
-    feature_str = "|".join([str(f) for f in features])
     
     # Create a simple hash
-    # Use a simpler hashing approach for better stability
     hash_val = 0
     for feature in features:
         hash_val = (hash_val * 31 + feature) & 0xFFFFFFFF
@@ -150,29 +109,14 @@ def create_hash_from_features(features):
     return format(hash_val, 'x')[:8]  # Return 8-character hex string
 
 def get_gesture_hash(landmarks, salt=""):
-    """
-    Generate a stable hash for a hand gesture that's consistent
-    for similar hand positions.
     
-    Args:
-        landmarks: List of landmark objects with x, y, z attributes
-        salt: Optional salt string to add security
-        
-    Returns:
-        Hash string
-    """
-    # Skip normalization as quantization and angle-based features provide enough stability
-    
-    # Calculate angles between joints and add finger extension state
     angles = calculate_finger_angles(landmarks)
     
-    # Quantize the angles and states to reduce sensitivity (using fewer bins)
-    quantized_features = quantize_features(angles, num_bins=0)
+    quantized_features = quantize_features(angles, num_bins=1)
     
-    # Create hash from quantized features
     feature_hash = create_hash_from_features(quantized_features)
     
-    # Apply salt if provided (simplified for better stability)
+    # Apply salt to make it more secure per user
     if salt:
         salted_features = quantized_features + [ord(c) % 5 for c in salt[:3]]
         return create_hash_from_features(salted_features)

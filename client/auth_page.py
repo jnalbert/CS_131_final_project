@@ -10,6 +10,7 @@ class AuthPage(QWidget):
         self.setWindowTitle(page_title)
         self.setFixedSize(500, 450)
         self.page_title = page_title
+        self.frame = None
 
         self.capturing = True  # Flag to track if video is running
 
@@ -67,10 +68,11 @@ class AuthPage(QWidget):
         self.content_widget.setLayout(content_layout)
   
     def capture_frame(self, frame):
-        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        h, w, ch = frame.shape
+        self.frame = frame
+        local_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        h, w, ch = local_frame.shape
         bytes_per_line = ch * w
-        q_image = QImage(frame.data, w, h, bytes_per_line, QImage.Format_RGB888)
+        q_image = QImage(local_frame.data, w, h, bytes_per_line, QImage.Format_RGB888)
         pixmap = QPixmap.fromImage(q_image)
         self.video_label.setPixmap(pixmap.scaled(
                 self.video_label.size(),

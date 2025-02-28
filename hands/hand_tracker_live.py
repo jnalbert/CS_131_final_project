@@ -3,7 +3,7 @@ import mediapipe as mp
 import numpy as np
 import json
 import os
-from gesture_conversions import normalize_landmarks, calculate_finger_angles, get_gesture_hash
+from gesture_conversions import get_gesture_hash
 
 # Initialize MediaPipe Hands and Drawing modules
 mp_hands = mp.solutions.hands

@@ -1,7 +1,8 @@
 from PySide6.QtCore import QTimer
+
+from hands.hand_tracker import process_image_with_frame
 from .auth_page import AuthPage
 from db.handle_db import insert_user, get_user
-from hands.gesture_conversions import quantize_features, create_hash_from_features, get_gesture_hash
 
 class LoginPage(AuthPage):
     def __init__(self, main_window):
@@ -23,9 +24,11 @@ class LoginPage(AuthPage):
             print(f"User {username} already exists.")
             return
         
+        password_hash = process_image_with_frame(self.frame, username)
+        
+        print(username, password_hash['gesture_hash'])
 
-
-        insert_user(username, "password")
+        insert_user(username, password_hash['gesture_hash'])
         self.finish_login(username)
 
         # QTimer.singleShot(2000, lambda: self.finish_login(username))
