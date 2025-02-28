@@ -43,6 +43,13 @@ class AuthPage(QWidget):
         content_layout = QVBoxLayout()
         content_layout.setSpacing(15)
 
+        # Add error message label at the top
+        self.error_label = QLabel("")
+        self.error_label.setStyleSheet("color: red; font-weight: bold; font-size: 14px;")
+        self.error_label.setAlignment(Qt.AlignCenter)
+        self.error_label.setVisible(False)  # Initially hidden
+        content_layout.addWidget(self.error_label)
+
         username_label = QLabel("Username:")
         username_label.setStyleSheet("font-size: 14px; font-weight: bold;")
         content_layout.addWidget(username_label)
@@ -60,6 +67,12 @@ class AuthPage(QWidget):
         self.capture_button = QPushButton("Capture Image")
         self.capture_button.clicked.connect(self.capture_image)
         content_layout.addWidget(self.capture_button)
+        
+        # Add restart button (initially disabled)
+        self.restart_button = QPushButton("Retake Image")
+        self.restart_button.clicked.connect(self.reset_capture)
+        self.restart_button.setEnabled(False)
+        content_layout.addWidget(self.restart_button)
         
         self.submit_button = QPushButton("Submit")
         self.submit_button.clicked.connect(self.submit_image)
@@ -89,15 +102,30 @@ class AuthPage(QWidget):
             self.capture_frame(frame)
 
     def capture_image(self):
+        self.hide_error()
         ret, frame = self.capture.read()
         if ret:
             self.capturing = False  # Stop updating the video
             self.capture_frame(frame)
+            print(f"Image captured: frame shape = {self.frame.shape if self.frame is not None else 'None'}")
 
             # Disable capture button, enable restart button
             self.capture_button.setEnabled(False)
             self.restart_button.setEnabled(True)
-
+            
+    def reset_capture(self):
+        """Reset the camera capture to allow taking a new image"""
+        self.capturing = True
+        self.capture_button.setEnabled(True)
+        self.restart_button.setEnabled(False)
+        self.submit_button.setEnabled(True)
+        
+    def show_error(self, message):
+        self.error_label.setText(message)
+        self.error_label.setVisible(True)
+        
+    def hide_error(self):
+        self.error_label.setVisible(False)
         
     def submit_image(self):
         # TODO: Implement this in the sub class
