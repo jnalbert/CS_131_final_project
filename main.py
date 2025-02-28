@@ -12,7 +12,7 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Password Manager")
-        self.setFixedSize(500, 450)
+        self.setFixedSize(700, 450)
         self.setStyleSheet("background-color: #0FFFF;")
 
         self.stack = QStackedWidget()

@@ -8,7 +8,7 @@ class AuthPage(QWidget):
         super().__init__()
         self.main_window = main_window
         self.setWindowTitle(page_title)
-        self.setFixedSize(500, 450)
+        self.setFixedSize(700, 450)
         self.page_title = page_title
         self.frame = None
 
